@@ -1,0 +1,14 @@
+lab3_top: Both partners worked on the file equally, implementing pair programming.
+We switched roughly every 15 minutes, having one person typing, and the other instructing.
+: 
+ModelSim: Pouya was mostly responsible for debugging the synthesizable verilog code once we compiled it in ModelSim.
+
+tb_lab3: Ben was mostly responsible for coding the testbench file.
+
+lab3_wave_rtl.do: Both partners simulated the code in ModelSim
+
+.vo file: Pouya extracted the file from quartus
+Ben instructed the  extraction process
+
+95% of the work was done together, with both partners working simultaniousely.
+

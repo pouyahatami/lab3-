@@ -1,0 +1,263 @@
+We used chatgpt to write the tb_lab3.sv testbench file and rewrite the lab3_top.sv file. We originally wrote a synthesizable Verilog file ourselves, but tweaked it with chatgpt. 
+
+ChatGPT Prompt:
+
+can you debug this for us module tb_lab3(); reg clock; reg reset; reg [9 : 0] switch_in; reg [6 : 0] hex0, hex1, hex2, hex3, hex4, hex5; lab3_top DUT ( .clk(clock), .rst_n(reset), .SW(switch_in), .HEX0(hex0), .HEX1(hex1), .HEX2(hex2), .HEX3(hex3), .HEX4(hex4), .HEX5(hex5), ); initial begin clock = 1'b0; //initially these are 0 reset = 1'b0; #5; //wait so the changes have time to happen switch_in = 9'b000000101; //we press 5 on the fpga #5; $display(HEX0 is %b, we expected %b, hex0, 9'b000000101); $stop; endmodule: tb_lab3
+ define Sa 4'b0000
+define Sb 4'b0001
+define Sc 4'b0010
+define Sd 4'b0011
+define Se 4'b0100
+define Sf 4'b0101
+define Sg 4'b0110
+define Sh 4'b0111
+define Si 4'b1000
+define Sj 4'b1001
+define Sk 4'b1010  //defining the states to make the code more readable
+define Sl 4'b1011
+define Sm 4'b1100
+
+
+
+module lab3_top(SW,KEY,HEX0,HEX1,HEX2,HEX3,HEX4,HEX5,LEDR);
+  input [9:0] SW;
+  input [3:0] KEY;
+  output [6:0] HEX0, HEX1, HEX2, HEX3, HEX4, HEX5;
+  output [9:0] LEDR;   // optional: use these outputs for debugging on your DE1-SoC
+
+
+
+  reg [3:0] present_state; //this is for the always block
+
+
+
+  wire clk = ~KEY[0];  // this is your clock
+  wire rst_n = KEY[3]; // this is your reset; your reset should be synchronous and active-low
+
+
+always_ff @(posedge clk) begin 
+    if (rst_n) begin 
+        present_state = Sa;
+        // can't we just use the array notation HEX[5]=1..... ?
+        // what does the decoder do here ?
+        // we understand that the decoder is to find which HEX to turn on how do we figure out the pins?
+        // reset button is active low inverted sign ?
+
+        //HEX0 = 7'b0010010;
+    end else begin 
+        case (present_state)
+        Sa : if( SW == 4'b0101) 
+            present_state = Sb ;
+            else 
+            present_state = Sh ;
+        Sb : if( SW == 4'b0100)
+            present_state = Sc ;
+            else
+            present_state = Si ;
+        Sc : if (SW == 4'b0000)
+            present_state = Sd ;
+            else
+            present_state = Sj ; 
+        Sd : if (SW == 4'b0011)
+            present_state = Se ;
+            else
+            present_state = Sk ;
+        Se : if (SW == 4'b0000)
+            present_state = Sf ;
+            else
+            present_state = Sl ;
+        Sf : if (SW == 4'b0101)
+            present_state = Sg ;
+            else
+            present_state = Sm;
+        Sg : present_state = Sg ;
+        Sh : present_state = Si ;
+        Si : present_state = Sj ;
+        Sj : present_state = Sk ;
+        Sk : present_state = Sl ;
+        Sl : present_state = Sm ;
+        Sm : present_state = Sm ;
+        default : present_state = 4'bxxxx;
+
+    endcase
+end
+
+ 
+always @*
+    case (present_state) 
+    Sg : begin 
+    HEX3 = 7'b1000000 ; 
+    HEX2 = 7'b0001100 ; 
+    HEX1 = 7'b0000110 ; 
+    HEX0 = 7'b0101011 ;
+    end
+    Sm : begin
+    HEX5 = 7'b1000110 ; 
+    HEX4 = 7'b1000111 ; 
+    HEX3 = 7'b1000000 ;
+    HEX2 = 7'b0010010 ;
+    HEX1 = 7'b0000110 ;
+    HEX0 = 7'b0100001 ;
+    end  
+    default : case (SW) begin
+        4'b0000 : HEX0 = 7'b1000000 ;
+        4'b0001 : HEX0 = 7'b1100111 ;
+        4'b0010 : HEX0 = 7'b0100100 ;
+        4'b0011 : HEX0 = 7'b0110000 ;
+        4'b0100 : HEX0 = 7'b0111000 ;
+        4'b0101 : HEX0 = 7'b0010010 ;
+        4'b0110 : HEX0 = 7'b0000010 ;
+        4'b0111 : HEX0 = 7'b1111000 ;
+        4'b1000 : HEX0 = 7'b0000000 ;
+        4'b1001 : HEX0 = 7'b0010000 ;
+		end
+        default : begin
+            HEX4 = 7'b1111001 ;
+            HEX3 = 7'b0101111 ;
+            HEX2 = 7'b0101111 ;
+            HEX1 = 7'b1000000 ;
+            HEX0 = 7'b0101111 ; 
+            end
+    endcase
+
+  end  
+
+    endcase
+
+end 
+
+endmodule
+
+
+
+
+
+define Sa 4'b0000
+define Sb 4'b0001
+define Sc 4'b0010
+define Sd 4'b0011
+define Se 4'b0100
+define Sf 4'b0101
+define Sg 4'b0110
+define Sh 4'b0111
+define Si 4'b1000
+define Sj 4'b1001
+define Sk 4'b1010  //defining the states to make the code more readable
+define Sl 4'b1011
+define Sm 4'b1100
+
+
+
+module lab3_top(SW,KEY,HEX0,HEX1,HEX2,HEX3,HEX4,HEX5,LEDR);
+  input [9:0] SW;
+  input [3:0] KEY;
+  output [6:0] HEX0, HEX1, HEX2, HEX3, HEX4, HEX5;
+  output [9:0] LEDR;
+   // optional: use these outputs for debugging on your DE1-SoC
+  reg [6:0] HEX0, HEX1, HEX2, HEX3, HEX4, HEX5;
+  //changed the hex outputs to reg for because we are assigning to them in the always block does that create any issues ? 
+
+
+  reg [3:0] present_state; //this is for the always block
+
+
+
+  wire clk = ~KEY[0];  // this is your clock
+  wire rst_n = KEY[3]; // this is your reset; your reset should be synchronous and active-low
+
+
+always_ff @(posedge clk) begin 
+    if (rst_n) begin 
+        present_state = Sa;
+
+        // reset button is active low inverted sign ?
+
+        //HEX0 = 7'b0010010;
+    end else begin 
+        case (present_state)
+        Sa : if( SW == 4'b0101) 
+            present_state = Sb ;
+            else 
+            present_state = Sh ;
+        Sb : if( SW == 4'b0100)
+            present_state = Sc ;
+            else
+            present_state = Si ;
+        Sc : if (SW == 4'b0000)
+            present_state = Sd ;
+            else
+            present_state = Sj ; 
+        Sd : if (SW == 4'b0011)
+            present_state = Se ;
+            else
+            present_state = Sk ;
+        Se : if (SW == 4'b0000)
+            present_state = Sf ;
+            else
+            present_state = Sl ;
+        Sf : if (SW == 4'b0101)
+            present_state = Sg ;
+            else
+            present_state = Sm;
+        Sg : present_state = Sg ;
+        Sh : present_state = Si ;
+        Si : present_state = Sj ;
+        Sj : present_state = Sk ;
+        Sk : present_state = Sl ;
+        Sl : present_state = Sm ;
+        Sm : present_state = Sm ;
+        default : present_state = 4'bxxxx;
+
+    endcase
+end
+end
+
+ 
+always @* begin
+    case (present_state) 
+    Sg : begin 
+    HEX3 = 7'b1000000 ; 
+    HEX2 = 7'b0001100 ; 
+    HEX1 = 7'b0000110 ; 
+    HEX0 = 7'b0101011 ;
+    end
+    Sm : begin
+    HEX5 = 7'b1000110 ; 
+    HEX4 = 7'b1000111 ; 
+    HEX3 = 7'b1000000 ;
+    HEX2 = 7'b0010010 ;
+    HEX1 = 7'b0000110 ;
+    HEX0 = 7'b0100001 ;
+    end  
+    default : begin 
+	case (SW) 
+        4'b0000 : HEX0 = 7'b1000000 ;
+        4'b0001 : HEX0 = 7'b1100111 ;
+        4'b0010 : HEX0 = 7'b0100100 ;
+        4'b0011 : HEX0 = 7'b0110000 ;
+        4'b0100 : HEX0 = 7'b0111000 ;
+        4'b0101 : HEX0 = 7'b0010010 ;
+        4'b0110 : HEX0 = 7'b0000010 ;
+        4'b0111 : HEX0 = 7'b1111000 ;
+        4'b1000 : HEX0 = 7'b0000000 ;
+        4'b1001 : HEX0 = 7'b0010000 ;
+        default : begin
+            HEX4 = 7'b1111001 ;
+            HEX3 = 7'b0101111 ;
+            HEX2 = 7'b0101111 ;
+            HEX1 = 7'b1000000 ;
+            HEX0 = 7'b0101111 ; 
+            
+end
+endcase
+end
+endcase 
+end 
+endmodule
+
+
+
+
+
+
+  are the begin ends messed up here ? fix e,
